@@ -190,6 +190,8 @@ void run_int_iteration(RawTestMetrics& metrics) {
     }
     metrics.t5b.push_back(timer.stop());
 
+    std::cerr << map.table_size << " baskets(x32 cells) on " << map.size() << " elements, means " << ((double)map.size() / (map.table_size * 32)) << " load factor" << '\n';
+
     glb_bad += bad;
 }
 

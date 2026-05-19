@@ -13,9 +13,9 @@
 #include "phmap/phmap.h"
 #endif
 
-const size_t INSERT_COUNT = 1000000 / 10; 
-const size_t LOOKUP_COUNT = 2000000 / 10;
-const int RUNS_COUNT = 25; 
+const size_t INSERT_COUNT = 1000000; 
+const size_t LOOKUP_COUNT = 2000000;
+const int RUNS_COUNT = 10; 
 
 volatile int glb_bad = 0;
 
