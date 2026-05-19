@@ -6,6 +6,8 @@ $benchData = [ordered]@{
     "GNU pb_ds (cc)" = "g++ test.cpp -DTTT=cc_hash_table $FLG"
     "GNU stdlib" = "g++ test.cpp -DTTT=unordered_map $FLG"
     "MSVC stdlib" = "clang++ test.cpp -DTTT=unordered_map $FLG -std=gnu++2c"
+    "ankerl" = "clang++ test.cpp -DTTT=ankerl::unordered_dense::map $FLG -std=gnu++2c"
+    "phmap" = "clang++ test.cpp -DTTT=phmap::flat_hash_map $FLG -std=gnu++2c -D_SILENCE_CXX20_IS_ALWAYS_EQUAL_DEPRECATION_WARNING"
     "Basketball foolish" = "clang++ test.cpp -DTTT=basketball -DBASKET1 $FLG -std=gnu++2c"
     "Basketball mmap" = "clang++ test.cpp -DTTT=basketball -DBASKET2 $FLG -std=gnu++2c"
     "Basketball avx" = "clang++ test.cpp -DTTT=basketball -DBASKET3 $FLG -std=gnu++2c"
@@ -27,7 +29,7 @@ $built = 0
 $total = $benchData.Count
 $benchData.Keys | % {
     Write-Progress -Activity "Building tests" `
-                   -Status "Building: $name ($($built+1)/$total)" `
+                   -Status "Building: $_ ($($built+1)/$total)" `
                    -PercentComplete ([int](($built / $total) * 100))
     $e = "bin/$built.exe"
     iex ($benchData[$_] + " -o $e")

@@ -8,8 +8,13 @@
 #include <cstring>
 #include <cmath>
 
-const size_t INSERT_COUNT = 1000000; 
-const size_t LOOKUP_COUNT = 2000000;
+#ifdef __clang__
+#include "unordered_dence.hpp"
+#include "phmap/phmap.h"
+#endif
+
+const size_t INSERT_COUNT = 1000000 / 2; 
+const size_t LOOKUP_COUNT = 2000000 / 2;
 const int RUNS_COUNT = 5; 
 
 volatile int glb_bad = 0;
