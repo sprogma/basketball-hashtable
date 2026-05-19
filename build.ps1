@@ -1,5 +1,5 @@
 param([switch]$NoStd)
-$FLG = "-O3", "-mavx2", "-Wno-microsoft-template"
+$FLG = "-O3", "-mavx2", "-mbmi", "-mbmi2", "-Wno-microsoft-template"
 
 $benchData = [ordered]@{
     "GNU pb_ds (gp)" = "g++ test.cpp -DTTT=gp_hash_table $FLG"
@@ -14,12 +14,14 @@ $benchData = [ordered]@{
     "Basketball load=inf" = "clang++ test.cpp -DTTT=basketball -DBASKET4 $FLG -std=gnu++2c"
     "Basketball prefetch" = "clang++ test.cpp -DTTT=basketball -DBASKET5 $FLG -std=gnu++2c"
     "Basketball AOSOA" = "clang++ test.cpp -DTTT=basketball -DBASKET6 $FLG -std=gnu++2c"
+    "Basketball After profiler" = "clang++ test.cpp -DTTT=basketball -DBASKET7 $FLG -std=gnu++2c"
     "Store Basket foolish" = "clang++ test.cpp -DTTT=basketball -DSTOREHASH -DBASKET1 $FLG -std=gnu++2c"
     "Store Basket mmap" = "clang++ test.cpp -DTTT=basketball -DSTOREHASH -DBASKET2 $FLG -std=gnu++2c"
     "Store Basket avx" = "clang++ test.cpp -DTTT=basketball -DSTOREHASH -DBASKET3 $FLG -std=gnu++2c"
     "Store Basket load=inf" = "clang++ test.cpp -DTTT=basketball -DSTOREHASH -DBASKET4 $FLG -std=gnu++2c"
     "Store Basket prefetch" = "clang++ test.cpp -DTTT=basketball -DSTOREHASH -DBASKET5 $FLG -std=gnu++2c"
     "Store Basket AOSOA" = "clang++ test.cpp -DTTT=basketball -DSTOREHASH -DBASKET6 $FLG -std=gnu++2c"
+    "Store Basket After profiler" = "clang++ test.cpp -DTTT=basketball -DSTOREHASH -DBASKET7 $FLG -std=gnu++2c"
 }
 $benchmarks = [ordered]@{}
 

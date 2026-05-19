@@ -21,8 +21,6 @@ foreach ($name in $benchmarks.Keys) {
     Write-Progress -Activity "Running Benchmarks" `
                    -Status "Executing: $name ($currentTest out of $totalTests)" `
                    -PercentComplete (($currentTest / $totalTests) * 100)
-
-    Write-Host " -> Running $name..." -ForegroundColor Yellow
     
     if (Test-Path $exePath) {
         $output = &$exePath 2>$null
@@ -38,6 +36,8 @@ foreach ($name in $benchmarks.Keys) {
             Write-Error "Test $name did not return a valid CSV payload."
         }
     }
+
+    Write-Host " -> Completed $name..." -ForegroundColor Green
 }
 
 Write-Progress -Activity "Running Benchmarks" -Completed
@@ -219,6 +219,6 @@ $htmlTemplate = @"
 # Output clean UTF-8 localized code block 
 $htmlTemplate | Out-File -FilePath "result.html" -Encoding utf8
 
-Write-Host "Done! Launching comprehensive dashboard report with winners highlighted..." -ForegroundColor Green
+Write-Host "Done! Launching report..." -ForegroundColor Green
 Invoke-Item "result.html"
 

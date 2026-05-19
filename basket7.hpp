@@ -55,6 +55,8 @@ void virtual_free(void* addr, size_t size)
 
 
 
+
+
 enum MapFlags : uint64_t {
     NONE = 0,
     STORE_HASH = 1,
@@ -68,11 +70,12 @@ template <
     typename Value,
     typename Hasher = std::hash<Key>,
     typename KeyEqual = std::equal_to<Key>,
-    uint64_t Flags = DEFAULT,
-    typename HashProbeType = uint8_t
+    uint64_t Flags = DEFAULT
 >
 class basketball
 {
+    using HashProbeType = uint8_t;
+    
 public:
     basketball()
     {
@@ -114,12 +117,7 @@ private:
     uint64_t count = 0;
     MegaBasket *data;
 
-    uint64_t linear_size() const
-    {
-        return table_size * ProbeBasketSize;
-    }
-    
-    uint64_t table_mask() const
+    [[gnu::always_inline]] inline uint64_t table_mask() const
     {
         return table_size - 1;
     }
@@ -130,7 +128,7 @@ private:
         return res == 0 ? 1 : res;
     }
 
-    inline void SetCell(uint64_t i, uint64_t t, const Key &key, const Value &value, uint64_t hash, uint8_t probe)
+    [[gnu::always_inline]] inline void SetCell(uint64_t i, uint64_t t, const Key &key, const Value &value, uint64_t hash, uint8_t probe)
     {
         if constexpr (Flags & STORE_HASH)
         {
@@ -141,14 +139,6 @@ private:
         data[i].probes[t] = probe;
     }
 
-    uint64_t GetFirstEmptyProbe(uint64_t i)
-    {
-        __m256i bucket_vector = _mm256_loadu_si256((__m256i *)data[i].probes);
-        __m256i cmp_zero = _mm256_cmpeq_epi8(bucket_vector, _mm256_setzero_si256());
-        uint32_t empty_mask = static_cast<uint32_t>(_mm256_movemask_epi8(cmp_zero));
-        return _tzcnt_u32(empty_mask);
-    }
-    
     void grow_up()
     {        
         uint64_t old_table_size = table_size;
@@ -214,6 +204,9 @@ public:
     {
         uint64_t hash = Hasher{}(key);
 
+        uint64_t i = hash & table_mask();
+        _mm_prefetch((const char *)&data[i].keys, _MM_HINT_T0);
+        _mm_prefetch((const char *)&data[i].keys + 32, _MM_HINT_T0);
 
         HashProbeType probe = GetProbe(hash);
         __m256i vprobe = _mm256_set1_epi8((char)probe);
@@ -221,9 +214,6 @@ public:
         // repeat insertion while it isn't successiful
         while (true)
         {
-            uint64_t i = hash & table_mask();
-            
-            _mm_prefetch((const char *)&data[i].keys, _MM_HINT_T0);
 
             __m256i bucket_vector = _mm256_loadu_si256((__m256i *)data[i].probes);
 
@@ -236,16 +226,16 @@ public:
             if constexpr ((Flags & STORE_HASH) != 0)
             {
                 uint32_t mask = match_mask;
-                while (mask != 0)
+                while (mask != 0) [[likely]]
                 {
                     uint64_t t = _tzcnt_u32(mask);
                     
                     uint64_t it_hash = data[i].hashes[t];
-                    if (it_hash == hash && KeyEqual{}(data[i].keys[t], key))
+                    if (it_hash == hash && KeyEqual{}(data[i].keys[t], key)) [[likely]]
                     {
                         return data[i].values + t;
                     }
-                    mask &= mask - 1;
+                    mask = _blsr_u32(mask);
                 }
 
                 uint64_t first_empty_t = _tzcnt_u32(empty_mask);
@@ -259,15 +249,15 @@ public:
             else
             {
                 uint32_t mask = match_mask;
-                while (mask != 0)
+                while (mask != 0) [[likely]]
                 {
                     uint64_t t = _tzcnt_u32(mask);
                     
-                    if (KeyEqual{}(data[i].keys[t], key))
+                    if (KeyEqual{}(data[i].keys[t], key)) [[likely]]
                     {
                         return data[i].values + t;
                     }
-                    mask &= mask - 1;
+                    mask = _blsr_u32(mask);
                 }
 
                 uint64_t first_empty_t = _tzcnt_u32(empty_mask);
@@ -280,6 +270,7 @@ public:
             }
             
             grow_up();
+            i = hash & table_mask();
         }
     }
 
@@ -301,32 +292,32 @@ public:
         if constexpr (Flags & STORE_HASH)
         {
             uint32_t mask = match_mask;
-            while (mask != 0)
+            while (mask != 0) [[likely]]
             {
                 uint64_t t = _tzcnt_u32(mask);
                 
                 uint64_t it_hash = data[i].hashes[t];
-                if (it_hash == hash && KeyEqual{}(data[i].keys[t], key))
+                if (it_hash == hash && KeyEqual{}(data[i].keys[t], key)) [[likely]]
                 {
                     return data[i].values + t;
                 }
 
-                mask &= mask - 1;
+                mask = _blsr_u32(mask);
             }
         }
         else
         {
             uint32_t mask = match_mask;
-            while (mask != 0)
+            while (mask != 0) [[likely]]
             {
                 uint64_t t = _tzcnt_u32(mask);
                 
-                if (KeyEqual{}(data[i].keys[t], key))
+                if (KeyEqual{}(data[i].keys[t], key)) [[likely]]
                 {
                     return data[i].values + t;
                 }
 
-                mask &= mask - 1;
+                mask = _blsr_u32(mask);
             }
         }
         return nullptr;
@@ -359,11 +350,10 @@ public:
                 if (it_hash == hash && KeyEqual{}(data[i].keys[t], key))
                 {
                     data[i].probes[t] = 0;
-                    data[i].hashes[t] = 0;
                     count--;
                     return true;
                 }
-                mask &= mask - 1;
+                mask = _blsr_u32(mask);
             }
         }
         else
@@ -379,7 +369,7 @@ public:
                     count--;
                     return true;
                 }
-                mask &= mask - 1;
+                mask = _blsr_u32(mask);
             }
         }
         return false;
@@ -395,7 +385,6 @@ public:
     bool empty() const { return count == 0; }
     static constexpr Value *end() { return nullptr; }
 };
-
 
 
 #endif

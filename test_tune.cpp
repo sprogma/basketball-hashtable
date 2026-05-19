@@ -13,8 +13,8 @@
 #include "phmap/phmap.h"
 #endif
 
-const size_t INSERT_COUNT = 1000000 / 10; 
-const size_t LOOKUP_COUNT = 2000000 / 10;
+const size_t INSERT_COUNT = 1000000 / 2; 
+const size_t LOOKUP_COUNT = 2000000 / 2;
 const int RUNS_COUNT = 25; 
 
 volatile int glb_bad = 0;
@@ -156,7 +156,7 @@ void run_int_iteration(RawTestMetrics& metrics) {
     #if defined(STOREHASH)
     TTT<int, int, std::hash<int>, std::equal_to<int>, STORE_HASH> map; 
     #else
-    TTT<int, int, std::hash<int>, std::equal_to<int>> map;
+    TTT<int, int> map;
     #endif
     
     timer.start();
@@ -277,26 +277,33 @@ int main() {
     raw_int.t4.clear(); raw_int.t5a.clear(); raw_int.t5b.clear();
 
     
+    Sleep(100);
     for (int run = 0; run < RUNS_COUNT; ++run) {
         run_int_iteration(raw_int);
-        run_string_iteration(raw_short, short_ins, short_mis);
-        run_string_iteration(raw_long, long_ins, long_mis);
     }
-
-    
-    FinalReport rep_int =   { calculate_statistics(raw_int.t1),   calculate_statistics(raw_int.t2),   calculate_statistics(raw_int.t3),   calculate_statistics(raw_int.t4),   calculate_statistics(raw_int.t5a),   calculate_statistics(raw_int.t5b) };
-    FinalReport rep_short = { calculate_statistics(raw_short.t1), calculate_statistics(raw_short.t2), calculate_statistics(raw_short.t3), calculate_statistics(raw_short.t4), calculate_statistics(raw_short.t5a), calculate_statistics(raw_short.t5b) };
-    FinalReport rep_long =  { calculate_statistics(raw_long.t1),  calculate_statistics(raw_long.t2),  calculate_statistics(raw_long.t3),  calculate_statistics(raw_long.t4),  calculate_statistics(raw_long.t5a),  calculate_statistics(raw_long.t5b) };
-
-    
-    cout << "stage;int_mean;int_err;short_str_mean;short_str_err;long_str_mean;long_str_err\n";
-
-    cout << "bulk_insertion"; print_stat_cell(rep_int.t1); print_stat_cell(rep_short.t1); print_stat_cell(rep_long.t1); cout << "\n";
-    cout << "successful_lookups"; print_stat_cell(rep_int.t2); print_stat_cell(rep_short.t2); print_stat_cell(rep_long.t2); cout << "\n";
-    cout << "unsuccessful_lookups"; print_stat_cell(rep_int.t3); print_stat_cell(rep_short.t3); print_stat_cell(rep_long.t3); cout << "\n";
-    cout << "update_existing_keys"; print_stat_cell(rep_int.t4); print_stat_cell(rep_short.t4); print_stat_cell(rep_long.t4); cout << "\n";
-    cout << "erasure"; print_stat_cell(rep_int.t5a); print_stat_cell(rep_short.t5a); print_stat_cell(rep_long.t5a); cout << "\n";
-    cout << "lookups_after_erasure"; print_stat_cell(rep_int.t5b); print_stat_cell(rep_short.t5b); print_stat_cell(rep_long.t5b); cout << "\n";
+    Sleep(100);
+    // for (int run = 0; run < RUNS_COUNT; ++run) {
+    //     run_string_iteration(raw_short, short_ins, short_mis);
+    // }
+    // Sleep(100);
+    // for (int run = 0; run < RUNS_COUNT; ++run) {
+    //     run_string_iteration(raw_long, long_ins, long_mis);
+    // }
+    // Sleep(100);
+        
+//     FinalReport rep_int =   { calculate_statistics(raw_int.t1),   calculate_statistics(raw_int.t2),   calculate_statistics(raw_int.t3),   calculate_statistics(raw_int.t4),   calculate_statistics(raw_int.t5a),   calculate_statistics(raw_int.t5b) };
+//     FinalReport rep_short = { calculate_statistics(raw_short.t1), calculate_statistics(raw_short.t2), calculate_statistics(raw_short.t3), calculate_statistics(raw_short.t4), calculate_statistics(raw_short.t5a), calculate_statistics(raw_short.t5b) };
+//     FinalReport rep_long =  { calculate_statistics(raw_long.t1),  calculate_statistics(raw_long.t2),  calculate_statistics(raw_long.t3),  calculate_statistics(raw_long.t4),  calculate_statistics(raw_long.t5a),  calculate_statistics(raw_long.t5b) };
+// 
+//     
+//     cout << "stage;int_mean;int_err;short_str_mean;short_str_err;long_str_mean;long_str_err\n";
+// 
+//     cout << "bulk_insertion"; print_stat_cell(rep_int.t1); print_stat_cell(rep_short.t1); print_stat_cell(rep_long.t1); cout << "\n";
+//     cout << "successful_lookups"; print_stat_cell(rep_int.t2); print_stat_cell(rep_short.t2); print_stat_cell(rep_long.t2); cout << "\n";
+//     cout << "unsuccessful_lookups"; print_stat_cell(rep_int.t3); print_stat_cell(rep_short.t3); print_stat_cell(rep_long.t3); cout << "\n";
+//     cout << "update_existing_keys"; print_stat_cell(rep_int.t4); print_stat_cell(rep_short.t4); print_stat_cell(rep_long.t4); cout << "\n";
+//     cout << "erasure"; print_stat_cell(rep_int.t5a); print_stat_cell(rep_short.t5a); print_stat_cell(rep_long.t5a); cout << "\n";
+//     cout << "lookups_after_erasure"; print_stat_cell(rep_int.t5b); print_stat_cell(rep_short.t5b); print_stat_cell(rep_long.t5b); cout << "\n";
     
     return glb_bad != 0;
 }
